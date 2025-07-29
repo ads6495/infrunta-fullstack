@@ -8,3 +8,129 @@ datasource db {
   provider = "postgres"
   url      = env("DATABASE_URL")
 }
+
+enum Level {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+enum Tier {
+  FREE
+  PREMIUM
+  PREMIUM_PLUS
+}
+
+
+enum ExerciseType {
+  AUDIO_IMAGE_MATCH // Type 1: Match audio to image/text
+  AUDIO_FILL_BLANK // Type 2: Fill in blank after audio
+  WORD_USAGE_QUIZ // Type 3: Quiz about word usage
+  SPELLING_BANK // Type 4: Spell word from letter bank
+  SYLLABLE_ASSEMBLY // Type 5: Assemble word from syllables
+  DRAG_MATCH // Type 6: Match pairs by dragging
+  PRONUNCIATION_CHALLENGE // Type 7: Listen and repeat for pronunciation
+  CONVERSATION_RESPONSE // Type 8: Choose correct response in dialogue
+  WORD_ORDER // Type 9: Rearrange words to form sentences
+  AUDIO_TYPING // Type 10: Type what you hear
+  FIND_MISTAKE // Type 11: Identify errors in text
+  ALPHABET_OVERVIEW // Type 12: Overview of the alphabet
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+}
+
+model Language {
+  id   Int    @id @default(autoincrement())
+  code String // e.g., "ro", "en"
+  name String // e.g., "Romanian", "English"
+
+  // Direct relation to units, removing CourseLevel intermediary
+  units Unit[]
+}
+
+model Unit {
+  id          Int      @id @default(autoincrement())
+  orderNumber Int
+  title       String
+  level       Level    @default(A1)
+  languageId  Int
+  language    Language @relation(fields: [languageId], references: [id])
+  objective   String
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String
+  orderNumber Int // New field to maintain lesson order
+  premium     Boolean? @default(false) // New field for monetization
+
+  unitId Int
+  unit   Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  exercises Exercise[]
+  progress  UserLessonProgress[]
+}
+
+model Exercise {
+  id       Int          @id @default(autoincrement())
+  type     ExerciseType
+  audioUrl String?
+  imageUrl String?
+  prompt   String? // Main exercise prompt/question
+
+  // Common fields for all exercise types
+  correctAnswer      String // Stores the correct answer
+  englishTranslation String? // For exercises needing English reference
+
+  // Exercise-specific content stored in JSON
+  options Json? // Stores options/choices for different exercise types
+
+  // For letter bank/syllable exercises
+  letterGroups Json? // Stores available letters or syllables
+
+  // Metadata
+  orderNumber Int // Control exercise sequence
+
+  // Relations
+  lessonId Int
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  // Track user attempts
+  attempts ExerciseAttempt[]
+}
+
+model UserLessonProgress {
+  id           String   @id @default(uuid())
+  completed    Boolean  @default(false)
+  lastAccessed DateTime @default(now())
+
+  userId   String
+  lessonId Int
+
+  user   User   @relation(fields: [userId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+}
+
+model ExerciseAttempt {
+  id         String   @id @default(uuid())
+  exerciseId Int
+  userId     String
+  answer     String // User's submitted answer
+  correct    Boolean
+  timestamp  DateTime @default(now())
+
+  exercise Exercise @relation(fields: [exerciseId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, exerciseId])
+}

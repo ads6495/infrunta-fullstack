@@ -1,10 +1,11 @@
 {
   "name": "infrunta-fullstack",
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "@biomejs/biome": "^2.0.0"
+  },
+  "packageManager": "bun@1.2.8",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
     "check": "biome check --write .",
     "dev": "turbo dev",
@@ -18,10 +19,8 @@
     "db:generate": "turbo -F server db:generate",
     "db:migrate": "turbo -F server db:migrate"
   },
-  "dependencies": {},
-  "devDependencies": {
-    "turbo": "^2.5.4",
-    "@biomejs/biome": "^2.0.0"
-  },
-  "packageManager": "bun@1.2.8"
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

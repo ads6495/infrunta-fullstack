@@ -6,6 +6,7 @@ import cors from "cors";
 import express from "express";
 import { auth } from "./lib/auth";
 import { toNodeHandler } from "better-auth/node";
+import { unitsRouter } from "./routers/units";
 
 const app = express();
 
@@ -32,7 +33,6 @@ app.use('/rpc{*path}', async (req, res, next) => {
 });
 
 app.use(express.json())
-
 
 app.get("/", (_req, res) => {
   res.status(200).send("OK");

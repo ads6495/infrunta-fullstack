@@ -3,35 +3,37 @@ import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { UnitsList } from "@/components/units-list";
 
 export const Route = createFileRoute("/dashboard")({
-  component: RouteComponent,
+	component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { data: session, isPending } = authClient.useSession();
+	const { data: session, isPending } = authClient.useSession();
 
-  const navigate = Route.useNavigate();
+	const navigate = Route.useNavigate();
 
-  const privateData = useQuery(orpc.privateData.queryOptions());
+	const privateData = useQuery(orpc.privateData.queryOptions());
 
-  useEffect(() => {
-    if (!session && !isPending) {
-      navigate({
-        to: "/login",
-      });
-    }
-  }, [session, isPending]);
+	useEffect(() => {
+		if (!session && !isPending) {
+			navigate({
+				to: "/login",
+			});
+		}
+	}, [session, isPending]);
 
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
+	if (isPending) {
+		return <div>Loading...</div>;
+	}
 
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Welcome {session?.user.name}</p>
-      <p>privateData: {privateData.data?.message}</p>
-    </div>
-  );
+	return (
+		<div>
+			<h1>Dashboard</h1>
+			<p>Welcome {session?.user.name}</p>
+			<p>privateData: {privateData.data?.message}</p>
+			<UnitsList />
+		</div>
+	);
 }
