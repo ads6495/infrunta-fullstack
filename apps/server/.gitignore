@@ -20,6 +20,9 @@ dist/
 .vercel
 
 # deps
+apps/server/prisma/generated
+apps/server/prisma/generated/*
+
 node_modules/
 /node_modules
 /.pnp
