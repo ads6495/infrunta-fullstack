@@ -21,18 +21,17 @@ app.use(
 
 app.all("/api/auth{/*path}", toNodeHandler(auth));
 
-
 const handler = new RPCHandler(appRouter);
-app.use('/rpc{*path}', async (req, res, next) => {
+app.use("/rpc{*path}", async (req, res, next) => {
   const { matched } = await handler.handle(req, res, {
-    prefix: '/rpc',
+    prefix: "/rpc",
     context: await createContext({ req }),
   });
   if (matched) return;
   next();
 });
 
-app.use(express.json())
+app.use(express.json());
 
 app.get("/", (_req, res) => {
   res.status(200).send("OK");

@@ -1,0 +1,275 @@
+## exercise handlers:
+import prisma from '../db';
+
+export const listExercises = async (req, res) => {
+  try {
+    const lessons = await prisma.exercise.findMany();
+    res.status(200).json(lessons);
+  } catch (error) {
+    console.error('Error fetching lessons:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getExerciseById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const exercise = await prisma.exercise.findUnique({
+      where: {
+        id: Number(id),
+      },
+    });
+    if (!exercise) {
+      return res.status(404).json({ error: 'exercise not found' });
+    }
+    res.status(200).json(exercise);
+  } catch (error) {
+    console.error('Error fetching exercise:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const createExercise = async (req, res) => {
+  try {
+    const { options, letterGroups, ...rest } = req.body;
+    const createdExercise = await prisma.exercise.create({
+      data: {
+        ...rest,
+        options: options ? JSON.parse(JSON.stringify(options)) : undefined,
+        letterGroups: letterGroups
+          ? JSON.parse(JSON.stringify(letterGroups))
+          : undefined,
+      },
+    });
+    res.status(201).json(createdExercise);
+  } catch (error) {
+    console.error('Error creating exercise:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateExercise = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const exerciseData = req.body;
+    const { options, letterGroups, ...rest } = exerciseData;
+    // TODO!: Veryify this doesnt doesnt override options to undefined if not provided
+    const updatedExercise = await prisma.exercise.update({
+      where: {
+        id: Number(id),
+      },
+      data: {
+        ...rest,
+        options: options ? JSON.parse(JSON.stringify(options)) : undefined,
+        letterGroups: letterGroups
+          ? JSON.parse(JSON.stringify(letterGroups))
+          : undefined,
+      },
+    });
+    res.status(200).json(updatedExercise);
+  } catch (error) {
+    console.error('Error updating exercise:', error);
+    res
+      .status(500)
+      .json({ error: 'Internal server error when updating exercise' });
+  }
+};
+
+export const deleteExercise = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.exercise.delete({
+      where: {
+        id: Number(id),
+      },
+    });
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting exercise:', error);
+    res
+      .status(500)
+      .json({ error: 'Internal server error when deleting exercise' });
+  }
+};
+
+## lesson handlers 
+export const listLessons = async (req, res) => {
+  try {
+    const lessons = await prisma.lesson.findMany();
+    res.status(200).json(lessons);
+  } catch (error) {
+    console.error('Error fetching lessons:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getLessonById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const lesson = await prisma.lesson.findUnique({
+      where: {
+        id: Number(id),
+      },
+    });
+    if (!lesson) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+    res.status(200).json(lesson);
+  } catch (error) {
+    console.error('Error fetching lesson:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const createLesson = async (req, res) => {
+  try {
+    const lesson = req.body;
+    const createdLesson = await prisma.lesson.create({
+      data: lesson,
+    });
+    res.status(201).json(createdLesson);
+  } catch (error) {
+    console.error('Error creating lesson:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateLesson = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const lessonData = req.body;
+    const updatedLesson = await prisma.lesson.update({
+      where: {
+        id: Number(id),
+      },
+      data: lessonData,
+    });
+    res.status(200).json(updatedLesson);
+  } catch (error) {
+    console.error('Error updating lesson:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const deleteLesson = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.lesson.delete({
+      where: {
+        id: Number(id),
+      },
+    });
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting lesson:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+## unit handlers
+import { Level } from '../../generated/prisma';
+
+export const listUnits = async (req, res) => {
+  try {
+    const units = await prisma.unit.findMany();
+    res.status(200).json(units);
+  } catch (error) {
+    console.error('Error fetching units:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// returns all lessons for a unit
+export const getunitLessonById = async (req, res) => {
+  const { unitId } = req.params;
+  try {
+    const unit = await prisma.unit.findUnique({
+      where: { id: Number(unitId) },
+    });
+
+    if (!unit) {
+      return res.status(404).json({ error: 'Unit not found' });
+    }
+
+    const lessons = await prisma.lesson.findMany({
+      where: { unitId: Number(unitId) },
+    });
+
+    if (!lessons) {
+      return res.status(404).json({ error: 'Lessons not found for this unit' });
+    }
+
+    res.status(200).json({ unit, lessons });
+  } catch (error) {
+    console.error('Error fetching unit lessons:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const createUnit = async (req, res) => {
+  try {
+    const unitData = req.body;
+    const createdUnit = await prisma.unit.create({
+      data: unitData,
+    });
+    res.status(201).json(createdUnit);
+  } catch (error) {
+    console.error('Error creating unit:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateUnit = async (req, res) => {
+  try {
+    const { unitId } = req.params;
+    const unitData = req.body;
+    const updatedUnit = await prisma.unit.update({
+      where: {
+        id: Number(unitId),
+      },
+      data: unitData,
+    });
+    res.status(200).json(updatedUnit);
+  } catch (error) {
+    console.error('Error updating unit:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const deleteUnit = async (req, res) => {
+  try {
+    const { unitId } = req.params;
+    await prisma.unit.delete({
+      where: {
+        id: Number(unitId),
+      },
+    });
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting unit:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getUnitsByLevel = async (req, res) => {
+  const { levelId } = req.params;
+  try {
+    const units = await prisma.unit.findMany({
+      where: {
+        level: levelId as Level,
+      },
+      include: {
+        lessons: {
+          select: {
+            id: true,
+            title: true,
+            premium: true,
+          },
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching units by level:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
